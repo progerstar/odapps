@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/dfu">
+        <file>images/dfu_icon.ico</file>
+        <file>data/variables.json</file>
+        <file>images/firmware.svg</file>
+    </qresource>
+    <qresource prefix="/unix">
+        <file>99-opendev-hid.rules</file>
+    </qresource>
+</RCC>

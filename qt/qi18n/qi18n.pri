@@ -1,0 +1,9 @@
+isEmpty(QI18N_PRI_INCLUDED) {
+
+QI18N_PRI_INCLUDED=1
+
+INCLUDEPATH += $$PWD
+
+HEADERS += $$PWD/qi18n.h
+SOURCES += $$PWD/qi18n.cpp
+}

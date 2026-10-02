@@ -1,0 +1,6 @@
+#ifndef WDTMON_VERSION_H
+#define WDTMON_VERSION_H
+
+#define WDTMON_VERSION "3.5.0"
+
+#endif // WDTMON_VERSION_H

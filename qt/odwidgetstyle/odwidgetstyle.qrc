@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/odwidgetstyle">
+        <file>opendev.qss</file>
+    </qresource>
+</RCC>

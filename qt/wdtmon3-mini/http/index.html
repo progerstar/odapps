@@ -1,0 +1,107 @@
+<!doctype html><html>
+<head>
+<meta charset="utf-8" />
+<title>USB Watchdog %SERIAL%</title>
+<link rel="icon" type="image/png" href="/favicon.png" />
+<style>
+           html, body {border: 0; padding: 0; margin: 0; height: 100%; background: #DEDEDE;}
+           body {overflow-x:hidden;}
+
+           .flex_container {display: flex; flex-direction: column; min-height: 100vh;}
+
+           header {background: #FFFFFF; color: #009ADF; border-bottom-width:2px; border-bottom-color:#009ADF; border-bottom-style: solid; margin-bottom: 10px; display: flex; flex-direction: rows; min-width: 100%;}
+           header img {width: 36px; height: 36px; background: #FFFFFF; margin: 2;}
+           header h1 { flex: 1; text-align: center;}
+           header ul {}
+           header li {list-style-type: none; display: inline; margin-left: 10px; margin-right: 10px; }
+           header li a {color: #009ADF; font-decoration: bold; font-size: large;}
+
+           section.content { flex: 1; width: 100%;}
+
+           .body_contents {position:relative; width: 50%; top: 0px; left: 25%; background: white; box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.7); border-radius: 10px; padding: 10px;}
+           .body_item {margin-top: 10px;}
+           .body_item header {background: #009ADF; padding: 5px 5px; color: white; font-size: 1.2em; font-weight: 600; border-radius: 1px 1px 0 0;}
+           .section_table {border: 1px solid #D1D1D1; border-collapse: collapse; width:100%}
+           .section_table td, th {padding: 3px; border: 1px solid #D1D1D1}
+           .action_form {float:right}
+           .action_form button {margin-top: 4px; margin-bottom: 1px; font-family: inherit; color: white; background: #CECECE; outline: none; border: none; padding: 2px 15px; font-size: 1.3em; font-weight: 400; border-radius: 3px; cursor: pointer;}
+
+            .tr_c {text-align: center}
+
+            footer {background: #FFFFFF; color: #009ADF; border-top-width:2px; border-top-color:#009ADF; border-top-style: solid; margin-top: 10px;}
+            footer ul {float: right; right: 10px;}
+            footer li {list-style-type: none; display: inline; margin-left: 10px; margin-right: 10px; }
+            footer li a {color: #009ADF; font-decoration: bold; font-size: large;}
+
+</style>
+</head>
+<body>
+
+<div class="flex_container">
+ <header>
+  <img src="/logo">
+  <h1>OPEN-DEV USB WATCHDOG WEB</h1>
+  <ul>
+   <li>
+    <a href="javascript:window.location.href=window.location.href">Reload</a>
+   </li>
+  </ul>
+ </header>
+
+ <section class="body_contents">
+  <div class='body_item bottom_h'>
+   <header>Uptime</header>
+   <table class="section_table">
+    <tr>
+     <td>SYS:</td><td>%SYS_UPTIME%</td>
+    </tr>
+    <tr>
+     <td>APP:</td><td>%APP_UPTIME%</td>
+    </tr>
+   </table>
+  </div>
+  <div class='body_item bottom_h'>
+   <header>Watchdog</header>
+   <table class="section_table">
+    <tr>
+     <td>Type:</td><td>%WDG_TYPE%</td>
+    </tr>
+    <tr>
+     <td>Version:</td><td>%WDG_VER%</td>
+    </tr>
+    <tr>
+     <td>Time:</td><td>%SYS_TIME%</td>
+    </tr>
+    <tr>
+     <td>CH1:</td><td>%WDG_CH1%</td>
+    </tr>
+    <tr>
+     <td>CH2:</td><td>%WDG_CH2%</td>
+    </tr>
+    <tr>
+     <td>CH3:</td><td>%WDG_TEMP%</td>
+    </tr>
+   </table>
+  </div>
+  <form class="action_form" method='post' action='/'>
+   <input type='hidden' name='token' value='%CSRF_TOKEN%'>
+   <button type='submit' name="ping" value="1" style="background: #aaff00">Update</button>
+   <button type='submit' name="reset" value="1" style="background: #ffaa00">Reset</button>
+   <button type='submit' name="hreset" value="1" style="background: red">Hard Reset</button>
+  </form>
+ </section>
+ <section class="content"></section>
+ <footer class="page_bottom top_h">
+  <ul>
+   <li>
+    <a href="/data" target="_blank">JSON Api</a>
+   </li>
+   <li>
+    <a href="https://unitx.pro" target="_blank">unitx.pro</a>
+   </li>
+  </ul>
+ </footer>
+</div>
+
+</body>
+</html>

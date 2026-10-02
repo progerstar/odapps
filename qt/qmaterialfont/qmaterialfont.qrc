@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/qtmf">
+        <file>latest/codepoints</file>
+        <file>latest/MaterialIcons-Regular.ttf</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,38 @@
+SpinBox{
+    property int decimals: 2
+    property real factor: Math.pow(10, decimals)
+    property real realFrom: 0.0
+    property real realTo: 100.0
+    property real realStepSize: 1.0
+    property string hint: ""
+
+    property real realValue: value*1.0/factor
+
+    id: spinbox
+
+    stepSize: realStepSize*factor
+    to : realTo*factor
+    from : realFrom*factor
+    editable: true
+
+    function set(rval) {
+        value = Math.round(rval * factor)
+    }
+
+    validator: DoubleValidator {
+        bottom: Math.min(spinbox.from, spinbox.to)*spinbox.factor
+        top:  Math.max(spinbox.from, spinbox.to)*spinbox.factor
+    }
+
+    textFromValue: function(value, locale) {
+        return (value*1.0/factor).toFixed(spinbox.decimals)
+    }
+
+    valueFromText: function(text, locale) {
+        return Math.round(parseFloat(text) * factor)
+    }
+
+    hoverEnabled: true
+    ToolTip.visible: hovered && (hint!=="")
+    ToolTip.text: hint
+}

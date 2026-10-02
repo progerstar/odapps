@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Toast.qml</file>
+        <file>ToastManager.qml</file>
+    </qresource>
+</RCC>

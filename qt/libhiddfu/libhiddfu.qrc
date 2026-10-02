@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/dfu">
+        <file>images/dfu_icon.ico</file>
+        <file>images/dialog-information.ico</file>
+        <file>images/edit-clear-all.png</file>
+        <file>images/emblem-synchronizing.ico</file>
+        <file>images/emblem-system.ico</file>
+        <file>images/media-flash.ico</file>
+        <file>images/media-floppy.ico</file>
+        <file>images/media-playback-start.ico</file>
+        <file>data/variables.json</file>
+        <file>images/firmware.svg</file>
+    </qresource>
+    <qresource prefix="/unix">
+        <file>99-opendev-hid.rules</file>
+    </qresource>
+</RCC>

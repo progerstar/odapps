@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>MaterialButton.qml</file>
+        <file>MaterialFont.qml</file>
+        <file>MaterialIndicator.qml</file>
+        <file>MaterialInput.qml</file>
+        <file>MaterialLabel.qml</file>
+        <file>MaterialPane.qml</file>
+        <file>MaterialSpin.qml</file>
+        <file>MaterialToolButton.qml</file>
+        <file>qmldir</file>
+        <file>fonts/MaterialIcons-Regular.ttf</file>
+        <file>MaterialScrollBar.qml</file>
+        <file>MaterialComboBox.qml</file>
+        <file>MaterialBox.qml</file>
+        <file>MaterialCard.qml</file>
+        <file>MaterialCheckGroup.qml</file>
+        <file>MaterialItem.qml</file>
+        <file>MaterialSlider.qml</file>
+    </qresource>
+</RCC>

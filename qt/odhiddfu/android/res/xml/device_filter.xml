@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- vendor and product ID for OD DFU 0483:a26e -->
+    <usb-device vendor-id="1155" product-id="41582" />
+</resources>

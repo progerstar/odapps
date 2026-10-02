@@ -1,0 +1,9 @@
+isEmpty(QSLIDESWITCH_PRI_INCLUDED) {
+QSLIDESWITCH_PRI_INCLUDED = 1
+
+INCLUDEPATH += $$PWD
+
+HEADERS += $$PWD/qslideswitch.h
+SOURCES += $$PWD/qslideswitch.cpp
+
+}

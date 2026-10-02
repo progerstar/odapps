@@ -1,0 +1,8 @@
+isEmpty(QJOURNALD_INCLUDED){
+QJOURNALD_INCLUDED=1
+
+INCLUDEPATH += $$PWD
+
+HEADERS += $$PWD/qjournald.h
+SOURCES += $$PWD/qjournald.cpp
+}

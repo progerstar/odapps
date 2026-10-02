@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "date": "2021.05.26 12:56",
+    "devices": {
+        "boot1": {
+            "name": "USB Boot",
+            "descr": "Devices with USB interface (watchdogs, RFID readers, programmable controllers)",
+            "transport": "usb",
+            "id": ["WDG DFU", "IO DFU", "UPY DFU", "UPY WDFU", "UPY MDFU", "OD DFU HB", "OD DFU MS", "DFU HID Interface", "OD DFU Interface"]
+        },
+        "boot3": {
+            "name": "UART Boot",
+            "descr": "Devices with UART/RS485 interface",
+            "transport": "rs485",
+            "id": ["UART", "RS485"],
+            "select": ["serial", "address", "speed"]
+        }
+    }
+}

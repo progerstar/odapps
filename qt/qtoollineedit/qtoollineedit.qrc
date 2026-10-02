@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/qtoollineedit">
+        <file>images/document-open.ico</file>
+        <file>images/edit-clear.ico</file>
+        <file>images/edit-paste.ico</file>
+    </qresource>
+</RCC>

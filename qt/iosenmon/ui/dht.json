@@ -1,0 +1,241 @@
+{
+    "type": "DHT",
+    "version": "1.0",
+    "settings": [
+        {
+            "key": "interval",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "label": {
+                "en": "Report Interval",
+                "ru": "Интервал"
+            },
+            "unit": {
+                "en": "s",
+                "ru": "сек"
+            },
+            "hint": {
+                "en": "Sensor data report interval",
+                "ru": "Интервал отправки данных устройством"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": 2.0,
+                "realTo": 86400.0,
+                "realStepSize": 0.01,
+                "editable": true
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "t_threshold",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "℃",
+            "label": {
+                "en": "Threshold (Temp.)",
+                "ru": "Порог (темп.)"
+            },
+            "hint": {
+                "en": "Sensor will report the current data immediately if the difference to the previous reading exceeds this value",
+                "ru": "Датчик сразу отправит данные, если изменение температуры превысит данное значение"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": 0.07,
+                "realTo": 655.35,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "t_norm_min",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "℃",
+            "label": {
+                "en": "Minimum (temp., normal)",
+                "ru": "Минимум (темп., норма)"
+            },
+            "hint": {
+                "en": "The minimal temperature considered as 'normal'",
+                "ru": "Минимальная 'нормальная' температура"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": -40.0,
+                "realTo": 125.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "t_norm_max",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "℃",
+            "label": {
+                "en": "Maximum (temp., normal)",
+                "ru": "Максимум (темп., норма)"
+            },
+            "hint": {
+                "en": "The maximal temperature considered as 'normal'",
+                "ru": "Максимальная 'нормальная' температура"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": -40.0,
+                "realTo": 125.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "t_accept_min",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "℃",
+            "label": {
+                "en": "Minimum (temp., acceptable)",
+                "ru": "Минимум (темп., приемлемо)"
+            },
+            "hint": {
+                "en": "The minimal temperature considered as 'acceptable'",
+                "ru": "Минимальная 'приемлемая' температура"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": -40.0,
+                "realTo": 125.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "t_accept_max",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "℃",
+            "label": {
+                "en": "Maximum (temp., acceptable)",
+                "ru": "Максимум (темп., приемлемо)"
+            },
+            "hint": {
+                "en": "The maximal temperature considered as 'acceptable'",
+                "ru": "Максимальная 'приемлемая' температура"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": -40.0,
+                "realTo": 125.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "h_threshold",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "%",
+            "label": {
+                "en": "Threshold (Hum.)",
+                "ru": "Порог (влажн.)"
+            },
+            "hint": {
+                "en": "Sensor will report the current data immediately if the difference to the previous reading exceeds this value",
+                "ru": "Датчик сразу отправит данные, если изменение влажности превысит данное значение"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": 0.07,
+                "realTo": 655.35,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "h_norm_min",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "%",
+            "label": {
+                "en": "Minimum (hum., normal)",
+                "ru": "Минимум (влажн., норма)"
+            },
+            "hint": {
+                "en": "The minimal humidity value considered as 'normal'",
+                "ru": "Минимальная 'нормальная' влажность"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": 0.0,
+                "realTo": 100.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "h_norm_max",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "%",
+            "label": {
+                "en": "Maximum (hum., normal)",
+                "ru": "Максимум (влажн., норма)"
+            },
+            "hint": {
+                "en": "The maximal humidity value considered as 'normal'",
+                "ru": "Максимальная 'нормальная' влажность"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": 0.0,
+                "realTo": 100.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "h_accept_min",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "%",
+            "label": {
+                "en": "Minimum (hum., acceptable)",
+                "ru": "Минимум (влажн., приемлемо)"
+            },
+            "hint": {
+                "en": "The minimal humidity value considered as 'acceptable'",
+                "ru": "Минимальная 'приемлемая' влажность"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": 0.0,
+                "realTo": 100.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "h_accept_max",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "%",
+            "label": {
+                "en": "Maximum (hum., acceptable)",
+                "ru": "Максимум (влажн., приемлемо)"
+            },
+            "hint": {
+                "en": "The maximal humidity value considered as 'acceptable'",
+                "ru": "Максимальная 'приемлемая' влажность"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": 0.0,
+                "realTo": 100.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        }
+    ]
+}

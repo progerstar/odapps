@@ -1,0 +1,57 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>SensorPage.qml</file>
+        <file>LogPage.qml</file>
+        <file>AboutPage.qml</file>
+        <file>AboutPageForm.ui.qml</file>
+        <file>TextFieldMenu.qml</file>
+        <file>SensorGauge.qml</file>
+        <file>iosenmon.ico</file>
+        <file>iosenmon.png</file>
+        <file>qml/DoubleSpinBox.qmlt</file>
+        <file>ui/ds18b20.json</file>
+        <file>SensorText.qml</file>
+        <file>SensorLCD.qml</file>
+        <file>MaterialToolButton.qml</file>
+        <file>MaterialFont.qml</file>
+        <file>qmldir</file>
+        <file>fonts/MaterialIcons-Regular.ttf</file>
+        <file>fonts/DigitalDream.ttf</file>
+        <file>LCDFont.qml</file>
+        <file>icons/ds18b20.ico</file>
+        <file>icons/hdc1080.ico</file>
+        <file>needle.png</file>
+        <file>SensorNone.qml</file>
+        <file>IOStyle.qml</file>
+        <file>SensorList.qml</file>
+        <file>images/sad_smiley.svg</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>LogList.qml</file>
+        <file>SettingsPage.qml</file>
+        <file>OdLineEdit.qml</file>
+        <file>TimeSlider.qml</file>
+        <file>RadioSwitch.qml</file>
+        <file>Toast.qml</file>
+        <file>ToastManager.qml</file>
+        <file>ui/hdc1080.json</file>
+        <file>ui/dht.json</file>
+    </qresource>
+    <qresource prefix="/lang">
+        <file>iosenmon_ru.qm</file>
+    </qresource>
+    <qresource prefix="/www">
+        <file>html/css/bootstrap.min.css</file>
+        <file>html/js/bootstrap.min.js</file>
+        <file>html/favicon.ico</file>
+        <file>html/favicon.png</file>
+        <file>html/js/gauge.min.js</file>
+        <file>html/index.html</file>
+        <file>html/js/jquery.min.js</file>
+        <file>html/css/jumbotron.css</file>
+        <file>html/logo.png</file>
+        <file>html/js/popper.min.js</file>
+        <file>html/css/material-icons.min.css</file>
+        <file>html/fonts/MaterialIcons-Regular.ttf</file>
+    </qresource>
+</RCC>

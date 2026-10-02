@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>odrfidcfg.ico</file>
+    </qresource>
+    <qresource prefix="/lang">
+        <file>odrfidcfg_ru.qm</file>
+    </qresource>
+</RCC>

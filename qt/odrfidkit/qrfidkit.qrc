@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/led_off.svg</file>
+        <file>images/led_ok.svg</file>
+        <file>odrfidkit.ico</file>
+    </qresource>
+    <qresource prefix="/lang">
+        <file>odrfidkit_ru.qm</file>
+    </qresource>
+</RCC>

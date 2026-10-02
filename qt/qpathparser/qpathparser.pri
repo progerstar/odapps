@@ -1,0 +1,8 @@
+isEmpty(QPATHPARSER_PRI_INCLUDED) {
+QPATHPARSER_PRI_INCLUDED = 1
+
+INCLUDEPATH += $$PWD
+
+HEADERS += $$PWD/qpathparser.h
+SOURCES += $$PWD/qpathparser.cpp
+}

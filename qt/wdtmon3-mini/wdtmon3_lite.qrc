@@ -1,0 +1,27 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/wdtmon3_lite_green.png</file>
+        <file>images/wdtmon3_lite_orange.png</file>
+        <file>images/wdtmon3_lite_red.png</file>
+        <file>images/wdtmon3_lite.png</file>
+        <file>images/led_green.png</file>
+        <file>images/led_off.png</file>
+        <file>images/led_orange.png</file>
+        <file>images/led_tinted.png</file>
+        <file>images/watchdog_lite_2.png</file>
+        <file>images/watchdog_pro_2.png</file>
+        <file>images/watchdog_error_bg.png</file>
+        <file>images/watchdog_unknown_bg.png</file>
+        <file>images/applications-system.png</file>
+        <file>images/ic_done.png</file>
+        <file>images/ic_settings_backup_restore.png</file>
+    </qresource>
+    <qresource prefix="/srv">
+        <file>http/index.html</file>
+        <file>http/logo.png</file>
+        <file>http/favicon.png</file>
+    </qresource>
+    <qresource prefix="/lang">
+        <file>wdtmon3_lite_ru.qm</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/mifare">
+        <file>images/bit-off.svg</file>
+        <file>images/bit-on.svg</file>
+        <file>themes/default.ini</file>
+        <file>themes/default_dark.ini</file>
+    </qresource>
+</RCC>

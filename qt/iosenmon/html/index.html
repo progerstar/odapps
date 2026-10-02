@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="favicon.ico">
+
+    <title>IO Sensor Monitor</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/material-icons.min.css" rel="stylesheet">
+    <link href="css/jumbotron.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <a class="navbar-brand" href="#"><img src="/logo.png" height="32px"> IOSenMon <span id='iFwVer'></span></a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/json">JSON Api</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="https://unitx.pro" target="_blank">Homepage</a>
+          </li>
+        </ul>
+        <span class="navbar-text pb-2"> <span id='iTimeStamp'></span> <i class="mdi mdi-network-wifi text-primary" id='iNwIndicator'></i></span>
+      </div>
+    </nav>
+  </header>
+
+    <main role="main" class="container-fluid">
+
+      <div class="row mt-5" id="sensorContainer">
+      </div>
+
+    </main>
+
+    <footer class="footer">
+      <hr>
+      <div class="row">
+        <div class="col-sm-12 col-md-4">&copy; Open-dev.ru</div>
+        <div class="col-sm-12 col-md-8 text-md-right" style="font-size: 80%;">Powered by
+          <a href="https://getbootstrap.com/" target="_blank">Bootstrap</a>,
+          <a href="http://bernii.github.io/gauge.js/" target="_blank">Gauge.js</a>, and
+          <a href="http://mervick.github.io/material-design-icons/" target="_blank">Material Icons</a>
+        </div>
+      </div>
+    </footer>
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/gauge.min.js"></script>
+    <script type="text/javascript" src="js/popper.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+
+    <script type="text/javascript">
+
+      function gauge_template(id) {
+        return '<canvas id="'+id+'_gauge" style="width: 100%"></canvas><div class="text-center"><span id="'+id+'_lcd" class="lcdDisplay">0</span></div>';
+      }
+
+      function _gauge_init(id, min, max, unit) {
+        var opts = {
+          angle: -0.15,
+          lineWidth: 0.24,
+          radiusScale: 1,
+          pointer: {
+            length: 0.6,
+            strokeWidth: 0.035,
+            color: "#000000"
+          },
+          limitMax: true,
+          limitMin: true,
+          percentColors: [[0.0, "#4305ff"], [0.31, "#0000fe"], [0.39, "#48e11e"], [0.61, "#ff861c"], [1.0, "#ff0059"]],
+          strokeColor: "#E0E0E0",
+          generateGradient: true,
+          highDpiSupport: true,
+        };
+
+        console.log('Create gauge for "'+id+'_gauge" canvas');
+        var gauge = new Gauge(document.getElementById(id+'_gauge')).setOptions(opts);
+        gauge.maxValue = max;
+        gauge.minValue = min;
+        gauge.set(0);
+
+        return {
+          handle: gauge,
+          update: function(value) {
+            jQuery('#'+id+'_lcd').text((Math.round(value*100)/100)+unit);
+            gauge.set(value);
+          }
+        };
+      }
+
+      var sensors = {};
+      var updateTimer = null;
+
+      jQuery(document).ready(function() {
+        jQuery.ajaxSetup({ cache: false });
+        jSetup();
+      });
+
+      function escapeHtml(str) {
+        return jQuery('<div>').text(String(str)).html();
+      }
+
+      function sensorDomId(sobj) {
+        /* serial numbers are device supplied: keep the id selector-safe */
+        return (sobj.type+'_'+sobj.serial).replace(/[^A-Za-z0-9_-]/g, '_');
+      }
+
+      function addSensorCard(sobj, template) {
+        var domId = sensorDomId(sobj);
+        var scard = $('<div class="col-xs-12 col-sm-6 col-md-3 pb-3"></div>');
+        var scontent = $('<div class="card card-outline-info" id="'+domId+'"><div class="card-header">'+escapeHtml(sobj.alias)+'</div><div class="card-body">'+template+'</div><div class="card-footer text-secondary"><div class="pull-left">'+escapeHtml(sobj.type)+'</div><div class="pull-right" id="'+domId+'_ts"></div></div></div>');
+        scontent.appendTo(scard);
+        scard.appendTo('#sensorContainer');
+      }
+
+      /* the range and the unit (C/F, %) are provided by the application */
+      function tryAddSensor(sobj) {
+        if (typeof sobj.min !== 'number' || typeof sobj.max !== 'number' || sobj.min >= sobj.max) {
+          console.log('Unusable sensor description for ' + sobj.type);
+          return;
+        }
+        var domId = sensorDomId(sobj);
+        addSensorCard(sobj, gauge_template(domId));
+        var sensor = _gauge_init(domId, sobj.min, sobj.max, sobj.unit || '');
+        sensor.type = sobj.type;
+        sensor.serial = sobj.serial;
+        sensor.alias = sobj.alias;
+        sensors[domId] = sensor;
+      }
+
+      function currentTime() {
+        var time = new Date();
+        return ("0" + time.getHours()).slice(-2) + ":" +
+               ("0" + time.getMinutes()).slice(-2) + ":" +
+               ("0" + time.getSeconds()).slice(-2);
+      }
+
+      function jSetup() {
+        jQuery('#sensorContainer').empty();
+        sensors = {};
+        jQuery.getJSON('/json', function(json) {
+          jQuery.each(json['sensors'], function(index, sobj) {
+            tryAddSensor(sobj);
+          });
+          jUpdate();
+          updateTimer = setInterval(jUpdate,2000);
+        });
+      }
+
+      function jUpdate() {
+        jQuery.getJSON('/json', function(json) {
+          var ts = currentTime();
+          jQuery('#iFwVer').text(json.version);
+          jQuery('#iTimeStamp').text(ts);
+          jQuery('#iNwIndicator').attr('class', 'mdi mdi-network-wifi text-success');
+
+          var all_sensors = new Set(Object.keys(sensors));
+          jQuery.each(json['sensors'], function(index, sobj) {
+            var id = sensorDomId(sobj);
+            if (all_sensors.has(id)) {
+              all_sensors.delete(id);
+            } else {
+              console.log('New sensor '+id);
+              tryAddSensor(sobj);
+            }
+            if(sensors[id]) {
+              sensors[id].update(sobj.value);
+              jQuery('#'+id).css('opacity', 1.0);
+              jQuery('#'+id+'_ts').text(ts);
+            }
+          });
+          for (let sid of all_sensors) {
+            console.log('Sensor '+sid+' gone');
+            jQuery('#'+sid).fadeTo(500,0.3);
+          }
+        }).fail(function(jqXHR, status, error) {
+          console.log('json request failure: '+status+' ('+error+')');
+          jQuery('#iNwIndicator').attr('class','mdi mdi-signal-wifi-off text-danger');
+        });
+      }
+
+    </script>
+  </body>
+</html>

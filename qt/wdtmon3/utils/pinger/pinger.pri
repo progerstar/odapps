@@ -1,0 +1,10 @@
+isEmpty(QPINGER_PRI_INCLUDED) {
+
+QPINGER_PRI_INCLUDED=1
+
+INCLUDEPATH += $$PWD
+
+HEADERS += $$PWD/pinger.h
+
+SOURCES += $$PWD/pinger.cpp
+}

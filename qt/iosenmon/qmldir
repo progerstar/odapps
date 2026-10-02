@@ -1,0 +1,3 @@
+singleton IOStyle 1.0 IOStyle.qml
+singleton LCDFont 1.0 LCDFont.qml
+singleton MaterialFont 1.0 MaterialFont.qml

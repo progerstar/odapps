@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+  <?define UpgradeCode="65102F44-E435-4B16-B70D-D4F3FB79E525" ?>
+
+    <Product Name='WatchdogMonitor3' Manufacturer='Open Developments LLC.'
+      Id='48AE8B2E-DE68-4F87-A50B-19A2AD626087'
+      UpgradeCode='65102F44-E435-4B16-B70D-D4F3FB79E525'
+      Language=1049  Codepage='1252' Version='3.5.0'>
+      <Package Id='*' Keywords='Installer' Description='Open Developments WatchdogMonitor3 Installer"
+              Comments='Open Developments LLC. https://unitx.pro' Manufacturer='Open Developments LLC.'
+              InstallerVersion='100' Languages='1049' Compressed='yes' SummaryCodepage='1252' />
+
+      <Media Id='1' Cabinet='Data.cab' EmbedCab='yes' DiskPrompt="CD-ROM #1" />
+      <Property Id='DiskPrompt' Value="Open Developments WatchdogMonitor3 Installation [1]" />
+
+      <Condition Message='This application only runs on Windows Vista and above'>VersionNT >= 600</Condition>
+
+      <Property Id="INSTALLDIR">
+        <IniFileSearch Id=OpenDevIniFile' Type='directory' Name='WatchdogMonitor3.ini' Section='Sample' Key='InstallDir' Field='1' />
+       </Property>
+
+      <Directory Id='TARGETDIR' Name='SourceDir'>
+        <Directory Id='ProgramFilesFolder' Name='PFiles'>
+          <Directory Id='Open-dev.ru' Name='Open-dev.ru'>
+            <Directory Id='INSTALLDIR' Name='WatchdogMonitor3'>
+
+            </Directory>
+          </Directory>
+        </Directory>
+
+        <Directory Id="ProgramMenuFolder" Name="Programs">
+          <Directory Id="ProgramMenuDir" Name="Foobar 1.0">
+            <Component Id="ProgramMenuDir" Guid="YOURGUID-7E98-44CE-B049-C477CC0A2B00">
+              <RemoveFolder Id='ProgramMenuDir' On='uninstall'/>
+              <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\[ProductName]' Type='string' Value='' KeyPath='yes' />
+            </Component>
+          </Directory>
+        </Directory>
+
+        <Directory Id="DesktopFolder" Name="Desktop" />
+      </Directory>
