@@ -320,6 +320,26 @@ jobs:
             done
           } > release-assets/qt-apps-versions.txt
 
+      - name: Add version-less aliases for stable download links
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          source qt/scripts/apps.sh
+          # iosenmon-1.1.0-linux-x86_64.AppImage -> iosenmon-linux-x86_64.AppImage,
+          # so .../releases/latest/download/<alias> never has to change.
+          cd release-assets
+          for app in "${ALL_APP_NAMES[@]}"; do
+            for file in "$app"-[0-9]*; do
+              [[ "$file" == *.sha256 ]] && continue
+              rest=${file#"$app"-}
+              alias_name="$app-${rest#*-}"
+              cp -- "$file" "$alias_name"
+              sha256sum -- "$alias_name" > "$alias_name.sha256"
+              sha256sum --check --strict "$alias_name.sha256" >&2
+            done
+          done
+
       - name: Publish release assets
         shell: bash
         env:

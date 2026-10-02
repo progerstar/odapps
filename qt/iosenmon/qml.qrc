@@ -36,6 +36,7 @@
         <file>ToastManager.qml</file>
         <file>ui/hdc1080.json</file>
         <file>ui/dht.json</file>
+        <file>ui/ntc10k.json</file>
     </qresource>
     <qresource prefix="/lang">
         <file>iosenmon_ru.qm</file>

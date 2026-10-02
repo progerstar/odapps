@@ -7,14 +7,15 @@
 
 #include "iosenmon_global.h"
 
-DS18B20Sensor::DS18B20Sensor(QObject* parent) : HidSensorInterface(parent), c_data(0.)
+DS18B20Sensor::DS18B20Sensor(const QString& model, QObject* parent) : HidSensorInterface(parent), c_data(0.), m_model(model)
 {
 
 }
 
 QString DS18B20Sensor::uiDescr() const
 {
-    QFile descr(":/ui/ds18b20.json");
+    /*NTC10K "resolution" is the ADC averaging count, so it has its own dialog*/
+    QFile descr(m_model == QLatin1String("NTC10K") ? ":/ui/ntc10k.json" : ":/ui/ds18b20.json");
     descr.open(QFile::ReadOnly);
     return QString::fromUtf8(descr.readAll());
 }
@@ -26,12 +27,14 @@ QString DS18B20Sensor::unit() const
 
 double DS18B20Sensor::dataMin() const
 {
-    return (QSettings().value(SETTINGS_UNITS_TEMP,"C").toString()=="F") ? (-55.0 * 9/5. + 32) : -55.0;
+    const double tmin = isNst1001() ? -50.0 : -55.0;
+    return (QSettings().value(SETTINGS_UNITS_TEMP,"C").toString()=="F") ? (tmin * 9/5. + 32) : tmin;
 }
 
 double DS18B20Sensor::dataMax() const
 {
-    return (QSettings().value(SETTINGS_UNITS_TEMP,"C").toString()=="F") ? (125.0 * 9/5. + 32) : 125.0;
+    const double tmax = isNst1001() ? 150.0 : 125.0;
+    return (QSettings().value(SETTINGS_UNITS_TEMP,"C").toString()=="F") ? (tmax * 9/5. + 32) : tmax;
 }
 
 QVariantMap DS18B20Sensor::setupUI()

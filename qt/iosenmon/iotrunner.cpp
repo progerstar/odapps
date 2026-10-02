@@ -421,9 +421,12 @@ void IOTRunner::settingsUpdated()
 QList<HidSensorInterface*> IOTRunner::open(const QString& device)
 {
     QList<HidSensorInterface*> ret;
-    if(device.startsWith("DS18B20"))
+    const QString model = device.section(QStringLiteral(" ("), 0, 0);
+    /*DS18B20 plus any other ODTEMP-1 temperature-only variant (NST1001, NTC10K...): same HID report layout*/
+    const bool unitxTemperature = HidSensorInterface::unitxModels().contains(model) && !model.startsWith(QLatin1String("DHT"));
+    if(device.startsWith("DS18B20") || unitxTemperature)
     {
-        HidSensorInterface* sns = new DS18B20Sensor(this);
+        HidSensorInterface* sns = new DS18B20Sensor(model, this);
         if(!sns->open(device,HidSensorInterface::Standalone,0))
         {
             delete sns;

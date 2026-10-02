@@ -126,13 +126,19 @@ HidSensorInterface::~HidSensorInterface()
     }
 }
 
+QSet<QString>& HidSensorInterface::unitxModels()
+{
+    static QSet<QString> models;
+    return models;
+}
+
 QStringList HidSensorInterface::availableDevices()
 {
     QStringList ret;
     QSet<QString> snRegistry;
     QRegExp iotProduct("IOT ([^\\s]+)(?: HID)?");
-    /* ODTEMP-1 DHT reports itself as "UNITX ODTEMP-1 DHT" */
-    QRegExp unitxProduct("UNITX ODTEMP-1 (DHT\\w*)");
+    /* ODTEMP-1 variants report themselves as "UNITX ODTEMP-1 <model> [HID]": DS18B20, DHT, NTC10K, NST1001... */
+    QRegExp unitxProduct("UNITX ODTEMP-1 (\\S+)(?: HID)?");
 
     struct hid_device_info *devs, *cur_dev;
     devs = hid_enumerate(OD_VID, OD_IOT_PID);
@@ -154,6 +160,7 @@ QStringList HidSensorInterface::availableDevices()
             else if(unitxProduct.exactMatch(product))
             {
                 model = unitxProduct.cap(1);
+                unitxModels().insert(model);
             }
         }
         if(!model.isEmpty())

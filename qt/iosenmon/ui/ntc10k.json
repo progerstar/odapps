@@ -1,0 +1,157 @@
+{
+    "type": "NTC10K",
+    "version": "1.0",
+    "settings": [
+        {
+            "key": "interval",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "label": {
+                "en": "Report Interval",
+                "ru": "Интервал"
+            },
+            "unit": {
+                "en": "s",
+                "ru": "сек"
+            },
+            "hint": {
+                "en": "Temperature report interval (in milliseconds)",
+                "ru": "Интервал отправки устройством температурных данных (в мс)"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": 0.13,
+                "realTo": 86400.0,
+                "realStepSize": 0.01,
+                "editable": true
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "resolution",
+            "type": "SpinBox",
+            "label": {
+                "en": "Averaging",
+                "ru": "Усреднение"
+            },
+            "unit": {
+                "en": "samples",
+                "ru": "отсч."
+            },
+            "hint": {
+                "en": "ADC averaging [1-16] samples",
+                "ru": "Усреднение отсчётов АЦП [1-16]"
+            },
+            "field": "value",
+            "params": {
+                "from": 1,
+                "to": 16
+            }
+        },
+        {
+            "key": "threshold",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "℃",
+            "label": {
+                "en": "Threshold",
+                "ru": "Порог"
+            },
+            "hint": {
+                "en": "Sensor will report the current temperature immediately if the difference to the previous reading exceeds this value",
+                "ru": "Датчик сразу отправит температурные данные, если изменение температуры превысит данное значение"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": 0.07,
+                "realTo": 655.35,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "norm_min",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "℃",
+            "label": {
+                "en": "Minimum (normal)",
+                "ru": "Минимум (норма)"
+            },
+            "hint": {
+                "en": "The minimal temperature considered as 'normal'",
+                "ru": "Минимальная 'нормальная' температура"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": -55.0,
+                "realTo": 125.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "norm_max",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "℃",
+            "label": {
+                "en": "Maximum (normal)",
+                "ru": "Максимум (норма)"
+            },
+            "hint": {
+                "en": "The minimal temperature considered as 'normal'",
+                "ru": "Максимальная 'нормальная' температура"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": -55.0,
+                "realTo": 125.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "accept_min",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "℃",
+            "label": {
+                "en": "Minimum (acceptable)",
+                "ru": "Минимум (приемлемо)"
+            },
+            "hint": {
+                "en": "The minimal temperature considered as 'acceptable'",
+                "ru": "Минимальная 'приемлемая' температура"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": -55.0,
+                "realTo": 125.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        },
+        {
+            "key": "accept_max",
+            "type": "DoubleSpinBox",
+            "custom": true,
+            "unit": "℃",
+            "label": {
+                "en": "Maximum (acceptable)",
+                "ru": "Максимум (приемлемо)"
+            },
+            "hint": {
+                "en": "The maximal temperature considered as 'acceptable'",
+                "ru": "Максимальная 'приемлемая' температура"
+            },
+            "field": "realValue",
+            "params": {
+                "realFrom": -55.0,
+                "realTo": 125.0,
+                "realStepSize": 0.01
+            },
+            "onInit": "set($1)"
+        }
+    ]
+}

@@ -2,6 +2,7 @@
 #define HIDSENSORINTERFACE_H
 
 #include <QObject>
+#include <QSet>
 #include <QTimerEvent>
 #include <QTimer>
 #include <QVariantMap>
@@ -67,6 +68,8 @@ class HidSensorInterface : public QObject
         virtual ~HidSensorInterface();
 
         Q_INVOKABLE static QStringList availableDevices();
+        /*models seen as "UNITX ODTEMP-1 <model>" (as opposed to legacy "IOT <model>")*/
+        static QSet<QString>& unitxModels();
         Q_INVOKABLE virtual bool open(const QString& name, HidSensorInterface::Status status, HidSensorInterface *relative);
 
         Q_INVOKABLE virtual QString type() const = 0;
