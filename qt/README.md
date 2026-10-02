@@ -1,7 +1,6 @@
 # OpenDev Qt applications
 
-This directory consolidates seven legacy Qt 5 applications and their shared
-source libraries:
+Qt 5 applications and their shared source libraries:
 
 - `odrfidkit`
 - `odrfidcfg`
@@ -11,8 +10,8 @@ source libraries:
 - `wdtmon3-mini` (formerly `wdtmon3_lite`)
 - `iosenmon`
 
-The original source directories are not required after this tree has been
-created. All relative qmake includes resolve inside this directory.
+Each application is a qmake project in its own directory; shared libraries
+live next to them in this directory.
 
 ## Linux
 
@@ -28,7 +27,8 @@ sudo apt install \
   qml-module-qtquick-controls2 qml-module-qtquick-layouts \
   qml-module-qtquick-window2 qml-module-qt-labs-settings \
   qml-module-qt-labs-platform qml-module-qt-labs-calendar \
-  qml-module-qtquick-extras qml-module-qtgraphicaleffects patchelf file rsync zip unzip
+  qml-module-qtquick-extras qml-module-qtgraphicaleffects \
+  patchelf file rsync zip unzip
 ```
 
 `odrfidcfgM` uses Qt 5 Serial Bus. Ubuntu 26.04 no longer ships its Qt 5
@@ -81,8 +81,7 @@ Set `SKIP_APPIMAGE=1` to create tarballs without `appimagetool`, or
 
 ## Native Windows x86-64
 
-The GitHub workflow builds Windows packages natively with MSYS2 UCRT64. The
-same build can be run in an MSYS2 UCRT64 shell after installing these packages:
+Windows packages are built natively with MSYS2 UCRT64. The build can be run in an MSYS2 UCRT64 shell after installing these packages:
 
 ```bash
 pacman -S --needed \
@@ -176,22 +175,4 @@ paths, creates an Applications shortcut, verifies the DMG and writes a
 By default, bundles receive an ad-hoc signature. To use an installed Developer
 ID certificate instead, set `MACOS_CODESIGN_IDENTITY` to its full identity.
 Notarization still requires Apple credentials and is intentionally not done by
-the public workflow.
-
-## GitHub Actions and releases
-
-`.github/workflows/qt-apps.yml` builds all seven applications on Linux x86-64,
-Windows x86-64, macOS ARM64 and macOS x86-64. Normal pushes and manual runs
-store packages as workflow artifacts. A semantic aggregate tag publishes all
-packages in one GitHub Release:
-
-```bash
-git tag -a qt-apps-v1.0.0 -m "Qt applications 1.0.0"
-git push origin qt-apps-v1.0.0
-```
-
-The number after `qt-apps-v` is the version of the release set; individual
-application versions remain independent and are included in filenames and in
-`qt-apps-versions.txt`. The release also contains per-file checksums and a
-combined `qt-apps-SHA256SUMS.txt`. Firmware directories are outside this
-workflow's path filters and are not built by it.
+the packaging script.
