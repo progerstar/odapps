@@ -12,4 +12,12 @@ QtObject {
     property color cardBorder: "#e1e5ea"
     property color textSecondary: "#6b7480"
     property int cardRadius: 8
+
+    //always the same number of decimals, otherwise 24.20 -> "24.2" and 24.00 -> "24" make the readouts jump
+    readonly property int valueDecimals: 2
+    function formatValue(value) {
+        var scale = Math.pow(10, valueDecimals)
+        //rounding first keeps tiny negative values from turning into "-0.00"
+        return (Math.round(Number(value) * scale) / scale).toFixed(valueDecimals)
+    }
 }

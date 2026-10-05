@@ -27,6 +27,6 @@ Rectangle {
             bold: true
         }
         color: Material.primary
-        text: "<b>%1</b> %2".arg(parseFloat(value.toFixed(2))).arg(unit)
+        text: "<b>%1</b> %2".arg(IOStyle.formatValue(value)).arg(unit)
     }
 }

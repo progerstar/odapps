@@ -86,6 +86,9 @@ class HidSensorInterface : public QObject
             return data;
         }
         virtual quint8 getState() const { return sens_state;}
+        /* the database and the log keep metric values: this is what the UI shows for such a value (Fahrenheit when selected) */
+        double displayValue(double metric) const;
+        const SensorStateDescr& stateDescr() const { return state_descr;}
         Q_INVOKABLE virtual QVariantMap setupUI() { return QVariantMap();}
 
         Q_INVOKABLE virtual QString serial() const;

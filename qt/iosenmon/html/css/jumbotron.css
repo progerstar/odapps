@@ -54,4 +54,7 @@ body > .container-fluid {
   font-size: 150%;
   font-variant-numeric: tabular-nums;
   padding: 6px 12px;
+  display: inline-block;
+  min-width: 9ch;
+  text-align: center;
 }

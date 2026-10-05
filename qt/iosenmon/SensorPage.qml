@@ -30,6 +30,26 @@ Pane {
         }
     }
 
+    //second channel of the same device (e.g. humidity next to temperature): only the gauge can show it
+    function set_value2(value) {
+        if(loader.item && (loader.item.dual !== undefined)) {
+            loader.item.value2 = value;
+        }
+    }
+
+    function setup2(unit,min,max,ui) {
+        if(loader.item && (loader.item.dual !== undefined)) {
+            loader.item.unit2 = unit;
+            loader.item.min2 = min;
+            loader.item.max2 = max;
+
+            for(var key in ui) {
+                loader.item[key+"2"] = ui[key];
+            }
+            loader.item.dual = true;
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 4

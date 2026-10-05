@@ -270,6 +270,15 @@ QString HidSensorInterface::serial() const
     return uuid;
 }
 
+double HidSensorInterface::displayValue(double metric) const
+{
+    if((sensorClass() == Temperature) && (QSettings().value(SETTINGS_UNITS_TEMP,"C").toString() == "F"))
+    {
+        return metric * 9/5. + 32;
+    }
+    return metric;
+}
+
 QString HidSensorInterface::firmware()
 {
     if(fwver.isEmpty())

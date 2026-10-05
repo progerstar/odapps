@@ -101,7 +101,7 @@ ListView {
                     elide: Text.ElideRight
                     textFormat: Text.PlainText
                     font.pixelSize: 18
-                    text: "%1  %2%3".arg(stype).arg(parseFloat(Number(sdata).toFixed(2))).arg(sunit)
+                    text: "%1  %2%3".arg(stype).arg(IOStyle.formatValue(sdata)).arg(sunit)
                 }
             }
 

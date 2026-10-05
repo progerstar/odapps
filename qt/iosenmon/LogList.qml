@@ -29,6 +29,12 @@ ListView {
         id: metric;
     }
 
+    //the log keeps metric values: show them like the sensor does (units, decimals)
+    function valueText(raw) {
+        var value = runner.logValue(raw)
+        return isNaN(value) ? raw : "%1%2".arg(IOStyle.formatValue(value)).arg(runner.sensor.unit())
+    }
+
     delegate: Item {
         id: wrapper
 
@@ -70,7 +76,7 @@ ListView {
                 Label {
                     id: dataField
                     font.bold: true
-                    text: ldata
+                    text: logView.valueText(ldata)
                     Layout.minimumWidth: Math.round(logView.width*0.3)
                 }
             }

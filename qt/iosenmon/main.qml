@@ -40,6 +40,10 @@ ApplicationWindow {
         if(trayIcon.available) {
             close.accepted = false;
             visible = false;
+        } else {
+            //no tray to bring the window back from, and the application does not quit on its own
+            //when the last window is closed (see main.cpp): closing the window ends the program
+            Qt.quit();
         }
     }
 
@@ -65,10 +69,14 @@ ApplicationWindow {
         swipeView.currentIndex = 0
     }
 
+    //true when the current sensor sits on the inner scale of the dial and its companion on the outer one
+    property bool dialSwapped: false
+
     //(re)configure the sensor page without navigating away
     function updateSensorView(obj) {
         page1.state = ""
         page1.label = ""
+        dialSwapped = false
         if(obj) {
             switch(obj.uiClass()) {
             case HidSensorInterface.LCD:
@@ -83,8 +91,23 @@ ApplicationWindow {
                 break;
             }
             page1.label = runner.alias(obj.serial());
-            page1.setup(obj.unit(),obj.minimumValue,obj.maximumValue,obj.setupUI());
-            page1.set_value(obj.value);
+
+            //the other channel of the same device (humidity next to temperature) shares the dial
+            var comp = runner.companion()
+            var outer = obj
+            var inner = null
+            if((page1.state === "gauge") && comp && (comp.uiClass() === HidSensorInterface.Gauge)) {
+                //temperature always on the outer scale, whichever sensor is selected
+                dialSwapped = (obj.sensorClass() > comp.sensorClass())
+                outer = dialSwapped ? comp : obj
+                inner = dialSwapped ? obj : comp
+            }
+            page1.setup(outer.unit(),outer.minimumValue,outer.maximumValue,outer.setupUI());
+            page1.set_value(outer.value);
+            if(inner) {
+                page1.setup2(inner.unit(),inner.minimumValue,inner.maximumValue,inner.setupUI());
+                page1.set_value2(inner.value);
+            }
         }
     }
 
@@ -558,9 +581,24 @@ ApplicationWindow {
         onSensorChanged: {
             mainwindow.showSensor(obj)
         }
+        onCompanionChanged: {
+            //the dial has to be rebuilt with (or without) the second channel
+            mainwindow.updateSensorView(runner.sensor)
+        }
         onDataChanged: {
             //console.log('Current sensor data changed to '+value);
-            page1.set_value(value);
+            if(mainwindow.dialSwapped) {
+                page1.set_value2(value);
+            } else {
+                page1.set_value(value);
+            }
+        }
+        onCompanionDataChanged: {
+            if(mainwindow.dialSwapped) {
+                page1.set_value(value);
+            } else {
+                page1.set_value2(value);
+            }
         }
         onStateChanged: {
 

@@ -14,7 +14,7 @@ Rectangle {
         anchors.centerIn: parent
         color: Material.primary
         font.pixelSize: 32
-        text: "<b>%1</b> %2".arg(parseFloat(sensorText.value.toFixed(2))).arg(sensorText.unit)
+        text: "<b>%1</b> %2".arg(IOStyle.formatValue(sensorText.value)).arg(sensorText.unit)
     }
 }
 

@@ -44,6 +44,8 @@ class IOTRunner : public QObject
         }
 
         Q_INVOKABLE inline HidSensorInterface* sensor() const { return current_sensor;}
+        /* the other channel of the current sensor's device (humidity next to temperature), or null */
+        Q_INVOKABLE inline HidSensorInterface* companion() const { return companion_sensor;}
         Q_INVOKABLE HidSensorInterface* select(const QString& type, const QString& sn);
         Q_INVOKABLE inline SensorListModel* sensorModel() { return &_sensorModel;}
         Q_INVOKABLE inline LogListModel* logModel() { return &_logModel; }
@@ -53,11 +55,15 @@ class IOTRunner : public QObject
             return aliasHash.value(sn,sn).toString();
         }
         Q_INVOKABLE void setAlias(const QString& sn, const QString& name);
+        /* a value of the log (always metric) in the units the current sensor shows; NaN if it is not a number */
+        Q_INVOKABLE double logValue(const QString& metric) const;
         Q_INVOKABLE QString suggestLogName() const;
         Q_INVOKABLE QString suggestLogPath() const;
     signals:
         void sensorChanged(HidSensorInterface* obj);
+        void companionChanged(HidSensorInterface* obj);
         void dataChanged(double value);
+        void companionDataChanged(double value);
         void stateChanged(int type);
         void aliasChanged(const QString& serial, const QString& alias);
         void error(const QString& descr);
@@ -80,6 +86,7 @@ class IOTRunner : public QObject
         QMUHttpServer* server;
         QList<HidSensorInterface*> sensors;
         HidSensorInterface* current_sensor;
+        HidSensorInterface* companion_sensor;
         SensorListModel _sensorModel;
         LogListModel _logModel;
         QHash<QString,QVariant> aliasHash;
@@ -88,6 +95,8 @@ class IOTRunner : public QObject
 
         QList<HidSensorInterface *> open(const QString& device);
         void setupCurrentSensor();
+        bool findCompanion();
+        void updateCompanion();
 
         QByteArray http_serve(const QString& path, const QString& query = QString());
         QString http_mime_detect(const QString& path);

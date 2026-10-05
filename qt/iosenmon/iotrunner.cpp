@@ -44,7 +44,7 @@ bool IOTRunner::fileExists(const QString& name)
 
 IOTRunner::IOTRunner(QObject *parent) : QObject(parent),
     journal(0), server(new QMUHttpServer(this)),
-    current_sensor(0), _sensorModel(this), _logModel(this)
+    current_sensor(0), companion_sensor(0), _sensorModel(this), _logModel(this)
 {
     aliasHash = set.value(SETTINGS_ALIASES).toHash();
     QString dbFile = set.value(SETTINGS_DB_LOC,"").toString();
@@ -85,6 +85,7 @@ IOTRunner::~IOTRunner()
     }
     journal = 0;
     current_sensor = 0;
+    companion_sensor = 0;
     _sensorModel.update(QList<HidSensorInterface*>());
     qDeleteAll(sensors);
     sensors.clear();
@@ -135,6 +136,18 @@ QByteArray IOTRunner::toJSON() const
         obj.insert("min",sensor->dataMin());
         obj.insert("max",sensor->dataMax());
         obj.insert("state",sensor->getState());
+        obj.insert("class",(sensor->sensorClass() == HidSensorInterface::Humidity) ? "humidity" : "temperature");
+        /* the same units as value/min/max; only when the thresholds make sense, as in HidSensorInterface::SensorStateDescr::state() */
+        const HidSensorInterface::SensorStateDescr& zones = sensor->stateDescr();
+        if((zones.accept_min < zones.normal_min) && (zones.normal_min < zones.normal_max) && (zones.normal_max < zones.accept_max))
+        {
+            QJsonObject z;
+            z.insert("accept_min",sensor->displayValue(zones.accept_min));
+            z.insert("normal_min",sensor->displayValue(zones.normal_min));
+            z.insert("normal_max",sensor->displayValue(zones.normal_max));
+            z.insert("accept_max",sensor->displayValue(zones.accept_max));
+            obj.insert("zones",z);
+        }
         objects.append(obj);
     }
     root.insert("sensors",objects);
@@ -162,6 +175,17 @@ void IOTRunner::setAlias(const QString& sn, const QString& name)
         }
         emit aliasChanged(sn,alias(sn));
     }
+}
+
+double IOTRunner::logValue(const QString& metric) const
+{
+    bool ok = false;
+    const double value = metric.toDouble(&ok);
+    if(!current_sensor || !ok)
+    {
+        return qQNaN();
+    }
+    return current_sensor->displayValue(value);
 }
 
 QString IOTRunner::suggestLogName() const
@@ -210,6 +234,7 @@ void IOTRunner::scan()
         current_sensor = sensors.at(0);
         setupCurrentSensor();
     }
+    updateCompanion();
 }
 
 void IOTRunner::sensor_dataChanged(double value)
@@ -223,6 +248,10 @@ void IOTRunner::sensor_dataChanged(double value)
         _logModel.insert(LogEntry(QDateTime::currentDateTime().toString(DB_DATE_TIME_FULL),QString::number(sensor->getMetricData())));
         emit dataChanged(value);
     }
+    else if(sensor == companion_sensor)
+    {
+        emit companionDataChanged(value);
+    }
     _sensorModel.itemUpdated(sensor);
 }
 
@@ -233,6 +262,10 @@ void IOTRunner::sensor_configChanged()
     {
         //update UI
         emit sensorChanged(current_sensor);
+    }
+    else if(companion_sensor && (sensor == companion_sensor))
+    {
+        emit companionChanged(companion_sensor);
     }
 }
 
@@ -269,6 +302,11 @@ void IOTRunner::sensor_error(const QString& descr)
         current_sensor = sensors.isEmpty() ? 0 : sensors.at(0);
         setupCurrentSensor();
         emit error(descr);
+    }
+    else
+    {
+        //the companion may have just gone away
+        updateCompanion();
     }
 
     sensor->deleteLater();
@@ -411,6 +449,12 @@ void IOTRunner::settingsUpdated()
     {
         sensor->getCurrentData();
     }
+    if(current_sensor)
+    {
+        /*the log shows its values in the sensor units: reload it, the units might have changed*/
+        _logModel.init(logTitle(current_sensor),
+                       db_entries(db_name(current_sensor),_logModel.capacity()));
+    }
     if(_sensorModel.rowCount())
     {
         /*units might have changed*/
@@ -503,7 +547,37 @@ void IOTRunner::setupCurrentSensor()
         _logModel.init(logTitle(current_sensor),
                        db_entries(db_name(current_sensor),_logModel.capacity()));
     }
+    /* the UI reads the companion together with the sensor, no separate signal */
+    findCompanion();
     emit sensorChanged(current_sensor);
+}
+
+bool IOTRunner::findCompanion()
+{
+    /* the temperature and humidity channels of one device share its serial number */
+    HidSensorInterface* found = 0;
+    if(current_sensor)
+    {
+        foreach(HidSensorInterface* sensor, sensors)
+        {
+            if((sensor != current_sensor) && (sensor->serial() == current_sensor->serial()))
+            {
+                found = sensor;
+                break;
+            }
+        }
+    }
+    const bool changed = (found != companion_sensor);
+    companion_sensor = found;
+    return changed;
+}
+
+void IOTRunner::updateCompanion()
+{
+    if(findCompanion())
+    {
+        emit companionChanged(companion_sensor);
+    }
 }
 
 QStringList IOTRunner::db_tables()
@@ -545,8 +619,9 @@ QList<LogEntry> IOTRunner::db_entries(const QString& table, int max, bool new_fi
 {
     QList<LogEntry> ret;
     QSqlQuery query(db);
-    /* Sub is the (unpadded) milliseconds: order by it numerically, show it zero-padded */
-    if(!query.exec(QString("SELECT (Time || '.' || printf('%03d', Sub)) as FTime, Data from '%1' ORDER BY Time %2, Sub %2 %3")
+    /* Sub is the (unpadded) milliseconds: order by it numerically, show it zero-padded
+     * (not printf('%03d'): QString::arg() takes %03 for the place marker %3) */
+    if(!query.exec(QString("SELECT (Time || '.' || substr('000' || Sub, -3)) as FTime, Data from '%1' ORDER BY Time %2, Sub %2 %3")
                    .arg(sqlQuote(table)).arg(new_first ? QLatin1String("DESC") : QLatin1String("ASC"))
                    .arg((max>0) ? QString("LIMIT %1").arg(max) : QString())))
     {
