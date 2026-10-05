@@ -90,6 +90,12 @@ python scripts/collect_licenses.py        # refreshes src/ndef_writer/THIRD_PART
 The workflow refuses a tag that differs from `__version__`, runs the tests on Linux, Windows and macOS,
 builds the four executables, smoke tests each of them and publishes the GitHub Release.
 
+ndef-writer releases are created with `--latest=false`, and the workflow fails if one becomes "Latest" anyway.
+The site links the Qt applications through `releases/latest/download/<app>-<os>-<arch>…`, which follows the
+"Latest" release of the whole repository: if an ndef-writer release takes it, every one of those links returns 404.
+Restore it with `gh release edit <newest qt-apps-v tag> --latest`. Link ndef-writer itself with versioned URLs
+(`releases/download/ndef-writer-vX.Y.Z/…`).
+
 ## Hardware validation
 
 Linux build, ODRFID3-N (firmware 3.13n), Mifare Classic 1K: Text, URI, Smart Poster, MIME, raw, batch, `format`,

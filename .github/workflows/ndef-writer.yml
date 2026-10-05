@@ -248,9 +248,26 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --clobber
           else
+            # --latest=false: the site links the Qt applications through releases/latest/download/...,
+            # so "Latest" must stay on the newest qt-apps-v* release.
             gh release create "$GITHUB_REF_NAME" "${assets[@]}" \
               --repo "$GITHUB_REPOSITORY" \
               --verify-tag \
+              --latest=false \
               --title "ndef-writer $VERSION" \
               --notes-file release-notes.md
+          fi
+
+      - name: Check that "Latest" stays on the Qt applications
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          latest="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)"
+          echo "Latest release: $latest"
+          if [[ "$latest" == ndef-writer-v* ]]; then
+            echo "::error::$latest became the Latest release: releases/latest/download links of the Qt applications are broken." \
+                 "Restore it with: gh release edit <newest qt-apps-v tag> --latest" >&2
+            exit 1
           fi
