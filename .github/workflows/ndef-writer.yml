@@ -1,0 +1,256 @@
+name: ndef-writer
+
+# Independent of qt-apps: its own folder, path filter, tag namespace (ndef-writer-v*),
+# artifact names, concurrency group and GitHub Release.
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "ndef-writer-v*"
+    paths:
+      - "ndef-writer/**"
+      - ".github/workflows/ndef-writer.yml"
+  pull_request:
+    paths:
+      - "ndef-writer/**"
+      - ".github/workflows/ndef-writer.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ndef-writer-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.14"
+
+jobs:
+  metadata:
+    name: Validate release metadata
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate the version and the tag
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' ndef-writer/src/ndef_writer/__init__.py)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ndef_writer.__version__ must look like 1.2.3, got '$version'" >&2
+            exit 1
+          fi
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            tag_version="${GITHUB_REF_NAME#ndef-writer-v}"
+            if [[ "$tag_version" == "$GITHUB_REF_NAME" || "$tag_version" != "$version" ]]; then
+              echo "The tag must be ndef-writer-v$version (ndef_writer.__version__ is $version)" >&2
+              exit 1
+            fi
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "ndef-writer $version" >> "$GITHUB_STEP_SUMMARY"
+
+  test:
+    name: Tests (${{ matrix.os }})
+    needs: metadata
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+          - windows-2022
+          - macos-15
+    defaults:
+      run:
+        shell: bash
+        working-directory: ndef-writer
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install pinned dependencies
+        run: python -m pip install --require-hashes --no-deps -r requirements.lock
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+  build:
+    name: Executable (${{ matrix.platform }})
+    needs:
+      - metadata
+      - test
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            platform: linux-x86_64
+            suffix: ""
+          - runner: windows-2022
+            platform: windows-x86_64
+            suffix: ".exe"
+          - runner: macos-15
+            platform: macos-arm64
+            suffix: ""
+          - runner: macos-15-intel
+            platform: macos-x86_64
+            suffix: ""
+    defaults:
+      run:
+        shell: bash
+        working-directory: ndef-writer
+    env:
+      VERSION: ${{ needs.metadata.outputs.version }}
+      ASSET: ndef-writer-${{ needs.metadata.outputs.version }}-${{ matrix.platform }}${{ matrix.suffix }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install pinned dependencies
+        run: python -m pip install --require-hashes --no-deps -r requirements.lock
+
+      - name: Build the executable
+        run: python scripts/build.py --expect-version "$VERSION"
+
+      - name: Check the file name and the checksum
+        run: |
+          set -euo pipefail
+          test -f "dist/$ASSET"
+          cd dist
+          if command -v sha256sum >/dev/null; then
+            sha256sum --check --strict "$ASSET.sha256"
+          else
+            shasum -a 256 --check "$ASSET.sha256"
+          fi
+
+      - name: Smoke test the executable
+        run: python scripts/smoke_test.py "dist/$ASSET" "$VERSION"
+
+      - name: Upload the executable
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ndef-writer-${{ matrix.platform }}
+          path: |
+            ndef-writer/dist/${{ env.ASSET }}
+            ndef-writer/dist/${{ env.ASSET }}.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/ndef-writer-v')
+    needs:
+      - metadata
+      - build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Download all executables
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: ndef-writer-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Verify the executables and write the checksum list
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          cd release-assets
+          checksums=(*.sha256)
+          if ((${#checksums[@]} != 4)); then
+            echo "Expected 4 platform builds, got ${#checksums[@]}: ${checksums[*]}" >&2
+            exit 1
+          fi
+          for checksum in "${checksums[@]}"; do
+            sha256sum --check --strict "$checksum" >&2
+          done
+          cat -- "${checksums[@]}" | LC_ALL=C sort -k2 > ndef-writer-SHA256SUMS.txt
+          rm -- "${checksums[@]}"
+          ls -l
+
+      - name: Write the release notes
+        shell: bash
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          cat > release-notes.md <<NOTES
+          Self-contained command line tool that writes NDEF messages (Text, URI, Smart Poster, MIME, raw) to
+          Mifare Classic, Ultralight and NTAG tags with an ODRFID reader. Python is not required.
+          Usage: https://unitx.pro/docs/rfid-nfc/ndef/
+
+          | Platform | File |
+          | --- | --- |
+          | Linux x86-64 (built on Ubuntu 22.04) | \`ndef-writer-${VERSION}-linux-x86_64\` |
+          | Windows x86-64 | \`ndef-writer-${VERSION}-windows-x86_64.exe\` |
+          | macOS, Apple silicon | \`ndef-writer-${VERSION}-macos-arm64\` |
+          | macOS, Intel | \`ndef-writer-${VERSION}-macos-x86_64\` |
+
+          The files are not code-signed.
+
+          - Linux and macOS: \`chmod +x ndef-writer-*\`. On macOS also clear the download quarantine:
+            \`xattr -d com.apple.quarantine ndef-writer-*\`.
+          - Windows: if SmartScreen stops the file, choose "More info", then "Run anyway".
+          - Check the download: \`sha256sum --check --ignore-missing ndef-writer-SHA256SUMS.txt\`
+            (macOS: \`shasum -a 256 --check --ignore-missing ndef-writer-SHA256SUMS.txt\`).
+          - \`ndef-writer --licenses\` shows the licenses of the bundled components.
+          NOTES
+
+      - name: Publish release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          assets=(release-assets/*)
+          if ((${#assets[@]} == 0)); then
+            echo "No release assets were downloaded" >&2
+            exit 1
+          fi
+
+          if gh release view "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "${assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --verify-tag \
+              --title "ndef-writer $VERSION" \
+              --notes-file release-notes.md
+          fi

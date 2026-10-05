@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ndef-writer"
+dynamic = ["version"]
+description = "Writes NDEF messages to Mifare Classic, Ultralight and NTAG tags using an ODRFID reader"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+dependencies = [
+    "ndeflib>=0.3.3",
+    "pyserial>=3.5",
+]
+
+[project.scripts]
+ndef-writer = "ndef_writer.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "ndef_writer.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ndef_writer = ["THIRD_PARTY_LICENSES.txt"]
