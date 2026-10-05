@@ -92,6 +92,25 @@ is_base_system_library()
     esac
 }
 
+# Libraries that must come from the host, never from the build machine. The GPU
+# driver (libGLX_mesa, ...) is loaded into the process and links against the
+# host's libstdc++, libdrm, libX11, etc.; bundled copies shadow those through
+# LD_LIBRARY_PATH. A GCC 12 libstdc++ lacks the GLIBCXX_3.4.32 that Mesa 26
+# needs, so the driver fails to load and Qt aborts with "Could not initialize
+# GLX". The build links against glibc 2.35 anyway, so any host that can run the
+# package already has a new enough libstdc++.
+is_host_library()
+{
+    case "$1" in
+        libstdc++.so*|libgcc_s.so*) return 0 ;;
+        libGL.so*|libGLX.so*|libGLdispatch.so*|libOpenGL.so*|libEGL.so*|libGLESv2.so*) return 0 ;;
+        libglapi.so*|libgbm.so*|libdrm.so*|libdrm_*.so*|libvulkan.so*|libwayland-*.so*) return 0 ;;
+        libX11.so*|libX11-xcb.so*|libxcb.so*|libXau.so*|libXdmcp.so*) return 0 ;;
+        libfontconfig.so*|libfreetype.so*|libharfbuzz.so*|libexpat.so*|libudev.so*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 copy_elf_dependencies()
 {
     local package_dir=$1
@@ -105,6 +124,7 @@ copy_elf_dependencies()
                 [[ -f "${dependency}" ]] || continue
                 name=$(basename -- "${dependency}")
                 is_base_system_library "${name}" && continue
+                is_host_library "${name}" && continue
                 if [[ ! -e "${package_dir}/usr/lib/${name}" ]]; then
                     cp -L "${dependency}" "${package_dir}/usr/lib/${name}"
                     copied=1
