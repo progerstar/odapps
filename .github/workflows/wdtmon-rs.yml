@@ -1,0 +1,40 @@
+name: wdtmon-rs
+
+# Builds rust/wdtmon-rs/ on every change and publishes a GitHub Release for a
+# wdtmon-rs-v<version> tag. The steps are in rust-app.yml; the release does not
+# become "Latest", which stays on the Qt applications.
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "wdtmon-rs-v*"
+    paths:
+      - "rust/wdtmon-rs/**"
+      - "rust/scripts/**"
+      - ".github/workflows/wdtmon-rs.yml"
+      - ".github/workflows/rust-app.yml"
+  pull_request:
+    paths:
+      - "rust/wdtmon-rs/**"
+      - "rust/scripts/**"
+      - ".github/workflows/wdtmon-rs.yml"
+      - ".github/workflows/rust-app.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wdtmon-rs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    uses: ./.github/workflows/rust-app.yml
+    with:
+      app: wdtmon-rs
+    # Only the release job of rust-app.yml uses the write access.
+    permissions:
+      contents: write

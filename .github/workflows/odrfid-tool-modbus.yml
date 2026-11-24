@@ -1,0 +1,40 @@
+name: odrfid-tool-modbus
+
+# Builds rust/odrfid-tool-modbus/ on every change and publishes a GitHub Release for a
+# odrfid-tool-modbus-v<version> tag. The steps are in rust-app.yml; the release does not
+# become "Latest", which stays on the Qt applications.
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "odrfid-tool-modbus-v*"
+    paths:
+      - "rust/odrfid-tool-modbus/**"
+      - "rust/scripts/**"
+      - ".github/workflows/odrfid-tool-modbus.yml"
+      - ".github/workflows/rust-app.yml"
+  pull_request:
+    paths:
+      - "rust/odrfid-tool-modbus/**"
+      - "rust/scripts/**"
+      - ".github/workflows/odrfid-tool-modbus.yml"
+      - ".github/workflows/rust-app.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: odrfid-tool-modbus-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    uses: ./.github/workflows/rust-app.yml
+    with:
+      app: odrfid-tool-modbus
+    # Only the release job of rust-app.yml uses the write access.
+    permissions:
+      contents: write
