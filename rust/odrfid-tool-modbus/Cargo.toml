@@ -1,0 +1,26 @@
+[package]
+name = "odrfid-tool-modbus"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.88"
+description = "ODRFID-485 configuration utility over Modbus RTU (egui rewrite of the Qt odrfidcfgM for firmware 4.0)"
+license = "GPL-3.0-or-later"
+publish = false
+
+[dependencies]
+eframe = "0.37"
+serialport = "4.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+directories = "6"
+rfd = "0.17"
+sys-locale = "0.3"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+png = "0.18"
+log = "0.4"
+env_logger = { version = "0.11", default-features = false, features = ["auto-color", "humantime"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 4
+strip = true

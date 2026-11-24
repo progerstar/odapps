@@ -1,0 +1,60 @@
+//! Phosphor icon codepoints (regular weight) kept in
+//! `assets/fonts/Phosphor-subset.ttf`. Adding one means re-running the
+//! subset command in `assets/fonts/README.md`.
+#![allow(dead_code)]
+
+pub const PLUGS: &str = "\u{EB56}";
+pub const PLUGS_CONNECTED: &str = "\u{EB5A}";
+pub const WARNING: &str = "\u{E4E0}";
+pub const LOCK_KEY: &str = "\u{E2FE}";
+pub const ARROW_COUNTER_CLOCKWISE: &str = "\u{E038}";
+pub const ARROWS_CLOCKWISE: &str = "\u{E094}";
+pub const LIGHTBULB: &str = "\u{E2DC}";
+pub const X: &str = "\u{E4F6}";
+pub const SIGN_IN: &str = "\u{E428}";
+pub const SIGN_OUT: &str = "\u{E42A}";
+pub const TRANSLATE: &str = "\u{E4A2}";
+pub const PALETTE: &str = "\u{E6C8}";
+pub const INFO: &str = "\u{E2CE}";
+pub const COPY: &str = "\u{E1CA}";
+pub const CHECK: &str = "\u{E182}";
+pub const QUESTION: &str = "\u{E3E8}";
+pub const MINUS: &str = "\u{E32A}";
+pub const PLUS: &str = "\u{E3D4}";
+pub const TIMER: &str = "\u{E492}";
+pub const POWER: &str = "\u{E3DA}";
+pub const CONTACTLESS_PAYMENT: &str = "\u{ED42}";
+pub const BROADCAST: &str = "\u{E0F2}";
+pub const KEY: &str = "\u{E2D6}";
+pub const PASSWORD: &str = "\u{E752}";
+pub const SPEAKER_HIGH: &str = "\u{E44A}";
+pub const BELL_RINGING: &str = "\u{E5E8}";
+pub const TERMINAL_WINDOW: &str = "\u{EAE8}";
+pub const LIST_BULLETS: &str = "\u{E2F2}";
+pub const DOWNLOAD_SIMPLE: &str = "\u{E20C}";
+pub const UPLOAD_SIMPLE: &str = "\u{E4C0}";
+pub const FLOPPY_DISK: &str = "\u{E248}";
+pub const IDENTIFICATION_CARD: &str = "\u{E2C8}";
+pub const CIRCUITRY: &str = "\u{E9C2}";
+pub const CPU: &str = "\u{E610}";
+pub const TRASH: &str = "\u{E4A6}";
+pub const EXPORT: &str = "\u{EAF0}";
+pub const MAGNIFYING_GLASS: &str = "\u{E30C}";
+pub const PLAY: &str = "\u{E3D0}";
+pub const STOP: &str = "\u{E46C}";
+pub const PAUSE: &str = "\u{E39E}";
+pub const GAUGE: &str = "\u{E628}";
+pub const HASH: &str = "\u{E2A2}";
+pub const QUEUE: &str = "\u{E6AC}";
+pub const FACTORY: &str = "\u{E760}";
+pub const ARROW_LINE_UP: &str = "\u{E066}";
+pub const ARROWS_LEFT_RIGHT: &str = "\u{E0A0}";
+pub const TOGGLE_RIGHT: &str = "\u{E676}";
+pub const STACK: &str = "\u{E466}";
+pub const CLOCK_COUNTER_CLOCKWISE: &str = "\u{E1A0}";
+pub const WAVEFORM: &str = "\u{E802}";
+pub const CHECK_CIRCLE: &str = "\u{E184}";
+pub const X_CIRCLE: &str = "\u{E4F8}";
+pub const CARET_RIGHT: &str = "\u{E13A}";
+pub const PAPER_PLANE_TILT: &str = "\u{E398}";
+pub const EYE_SLASH: &str = "\u{E224}";
