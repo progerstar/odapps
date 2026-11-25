@@ -15,6 +15,10 @@ pub mod input {
     /// 1..24: card in the field, odometer, faults, the current card, I/O.
     pub const STATUS: u16 = 1;
     pub const STATUS_COUNT: u16 = 24;
+    /// 25..29: the power-on self-test; builds before Nov 25 2026 answer
+    /// exception 02.
+    pub const SELF_TEST: u16 = 25;
+    pub const SELF_TEST_COUNT: u16 = 5;
     /// 256..260: model, firmware version, serial number.
     pub const IDENTITY: u16 = 256;
     pub const IDENTITY_COUNT: u16 = 5;
@@ -167,6 +171,108 @@ impl Live {
             led2: r[22] != 0,
             beeper: r[23] != 0,
         })
+    }
+}
+
+/// Input registers 25..29: what the firmware found at its last start.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SelfTest {
+    /// 0: no fault; 1: P01, the MFRC522; 2: P02, the EEPROM write. The
+    /// lower code when both failed.
+    pub code: u16,
+    /// Checks run and failed: bit 0 the MFRC522, bit 1 the EEPROM write.
+    pub done: u8,
+    pub failed: u8,
+    /// The MFRC522 VersionReg, read twice.
+    pub chip_version: [u8; 2],
+    /// VDDA in mV; 0: not measured.
+    pub vdda_mv: u16,
+    /// RCC_CSR bits 24..31 before this start.
+    pub reset: u8,
+}
+
+/// Input 29 bits, lowest first, as the MODBUS_MAP table names them.
+pub const RESET_CAUSES: [&str; 8] = [
+    "firewall",
+    "option bytes loaded",
+    "NRST pin",
+    "power on or brownout",
+    "software restart",
+    "watchdog",
+    "window watchdog",
+    "low-power mode exit",
+];
+
+impl SelfTest {
+    pub fn parse(r: &[u16]) -> Option<Self> {
+        let r: &[u16; 5] = r.get(..5)?.try_into().ok()?;
+        Some(Self {
+            code: r[0],
+            done: (r[1] >> 8) as u8,
+            failed: r[1] as u8,
+            chip_version: [(r[2] >> 8) as u8, r[2] as u8],
+            vdda_mv: r[3],
+            reset: r[4] as u8,
+        })
+    }
+
+    pub fn passed(&self) -> bool {
+        self.code == 0 && self.failed == 0
+    }
+
+    /// `P01 MFRC522, P02 EEPROM write` for the failed checks.
+    pub fn faults(&self) -> String {
+        let mut f = Vec::new();
+        if self.code == 1 || self.failed & 1 != 0 {
+            f.push(format!("P01 {}", tr("MFRC522 did not start")));
+        }
+        if self.code == 2 || self.failed & 2 != 0 {
+            f.push(format!("P02 {}", tr("EEPROM write failed")));
+        }
+        if f.is_empty() {
+            f.push(format!("P{:02}", self.code));
+        }
+        f.join(", ")
+    }
+
+    /// `0x92` (NXP MFRC522 2.0), or both reads when they differed.
+    pub fn chip_text(&self) -> String {
+        let [a, b] = self.chip_version;
+        let name = match a {
+            0x91 => " (NXP 1.0)",
+            0x92 => " (NXP 2.0)",
+            _ => "",
+        };
+        if a == b {
+            format!("0x{a:02X}{name}")
+        } else {
+            format!("0x{a:02X} / 0x{b:02X}")
+        }
+    }
+
+    /// `3283 mV`, or `None` when it was not measured.
+    pub fn vdda_text(&self) -> Option<String> {
+        (self.vdda_mv != 0).then(|| trf("{} mV", &[&self.vdda_mv]))
+    }
+
+    /// The reset causes, comma-separated. Every internal reset drives the
+    /// NRST pin too, so that bit alone means the pin.
+    pub fn reset_text(&self) -> String {
+        const NRST: u8 = 1 << 2;
+        let bits = if self.reset & !NRST != 0 {
+            self.reset & !NRST
+        } else {
+            self.reset
+        };
+        let causes: Vec<&str> = (0..8)
+            .filter(|b| bits & (1 << b) != 0)
+            .map(|b| tr(RESET_CAUSES[b]))
+            .collect();
+        if causes.is_empty() {
+            tr("not reported").to_string()
+        } else {
+            causes.join(", ")
+        }
     }
 }
 
@@ -922,6 +1028,48 @@ pub fn parse_hex(text: &str) -> Option<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn self_test() {
+        // Read from the bench reader, 4.0F Nov 25 2026, after a restart.
+        let t = SelfTest::parse(&[0, 0x0300, 0x8282, 3283, 0x14]).unwrap();
+        assert!(t.passed());
+        assert_eq!(t.chip_text(), "0x82");
+        assert_eq!(t.vdda_text().as_deref(), Some("3283 mV"));
+        // NRST goes with the software restart.
+        assert_eq!(t.reset_text(), "software restart");
+        let power = SelfTest { reset: 0x0C, ..t };
+        assert_eq!(power.reset_text(), "power on or brownout");
+        let pin = SelfTest { reset: 0x04, ..t };
+        assert_eq!(pin.reset_text(), "NRST pin");
+        assert_eq!(SelfTest { reset: 0, ..t }.reset_text(), "not reported");
+
+        let bad = SelfTest::parse(&[1, 0x0303, 0x0000, 0, 0x20]).unwrap();
+        assert!(!bad.passed());
+        assert_eq!(
+            bad.faults(),
+            "P01 MFRC522 did not start, P02 EEPROM write failed"
+        );
+        assert_eq!(bad.vdda_text(), None);
+        assert_eq!(bad.reset_text(), "watchdog");
+        assert_eq!(
+            SelfTest {
+                chip_version: [0x92, 0x92],
+                ..t
+            }
+            .chip_text(),
+            "0x92 (NXP 2.0)"
+        );
+        assert_eq!(
+            SelfTest {
+                chip_version: [0x92, 0x00],
+                ..t
+            }
+            .chip_text(),
+            "0x92 / 0x00"
+        );
+        assert!(SelfTest::parse(&[0; 4]).is_none());
+    }
 
     #[test]
     fn identity_and_status_of_the_emulator() {

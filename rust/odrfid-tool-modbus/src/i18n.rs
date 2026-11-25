@@ -78,8 +78,8 @@ fn russian(en: &str) -> Option<&'static str> {
         }
         "Retrying…" => "Повторная попытка…",
         "See the Connection page" => "Подробности на странице «Подключение»",
-        "Update with odhiddfu or rs485_firmware_update.py" => {
-            "Обновите прошивку в odhiddfu или rs485_firmware_update.py"
+        "Open the loader and upload the firmware within 30 s" => {
+            "Откройте загрузчик и загрузите прошивку в течение 30 с"
         }
         "IN high" => "IN: 1",
         "IN low" => "IN: 0",
@@ -109,8 +109,8 @@ fn russian(en: &str) -> Option<&'static str> {
         "Start the bootloader for a firmware update?" => {
             "Запустить загрузчик для обновления прошивки?"
         }
-        "Modbus stops until the bootloader gets the firmware or the power is cycled." => {
-            "Modbus не работает, пока загрузчик не получит прошивку или питание не будет перезапущено."
+        "Modbus stops while the reader waits for the firmware. If no upload starts within 30 s, the reader returns to work." => {
+            "Пока считыватель ждёт прошивку, Modbus не работает. Если загрузка не начнётся в течение 30 с, считыватель вернётся к работе."
         }
         "Start the bootloader" => "Запустить загрузчик",
         "Cancel" => "Отмена",
@@ -168,8 +168,8 @@ fn russian(en: &str) -> Option<&'static str> {
         "Close the other program (a terminal, another configuration tool) and connect again." => {
             "Закройте другую программу (терминал, другую утилиту настройки) и подключитесь снова."
         }
-        "This tool works with ODRFID-485 readers with firmware 4.x. Readers with 3.x need the firmware update first (rs485_firmware_update.py) or the Qt odrfidcfgM." => {
-            "Утилита работает со считывателями ODRFID-485 с прошивкой 4.x. Считыватели с 3.x сначала обновите (rs485_firmware_update.py) или настройте в Qt-версии odrfidcfgM."
+        "This tool works with ODRFID-485 readers with firmware 4.x. Configure readers with 3.x in ODRFIDConfigM." => {
+            "Утилита работает со считывателями ODRFID-485 с прошивкой 4.x. Считыватели с 3.x настройте в ODRFIDConfigM."
         }
 
         // The reader
@@ -181,6 +181,22 @@ fn russian(en: &str) -> Option<&'static str> {
         "Starts" => "Запусков",
         "not counted: EEPROM write failed" => "не учтён: ошибка записи EEPROM",
         "RFID chip" => "RFID-чип",
+        "Self-test at start" => "Самопроверка при запуске",
+        "passed" => "пройдена",
+        "Supply at start" => "Питание при запуске",
+        "Last reset" => "Причина последнего сброса",
+        "Self-test failed" => "Самопроверка не пройдена",
+        "EEPROM write failed" => "запись в EEPROM не удалась",
+        "{} mV" => "{} мВ",
+        "not reported" => "не сообщается",
+        "firewall" => "firewall",
+        "option bytes loaded" => "загрузка option bytes",
+        "NRST pin" => "вывод NRST",
+        "power on or brownout" => "включение или провал питания",
+        "software restart" => "программный перезапуск",
+        "watchdog" => "сторожевой таймер",
+        "window watchdog" => "оконный сторожевой таймер",
+        "low-power mode exit" => "выход из режима пониженного потребления",
         "MFRC522 did not start" => "MFRC522 не запустился",
         "OK" => "OK",
         "{} d {} h {} min" => "{} д {} ч {} мин",
@@ -267,8 +283,8 @@ fn russian(en: &str) -> Option<&'static str> {
         "Reset…" => "Сбросить…",
         "Firmware update" => "Обновление прошивки",
         "Bootloader…" => "Загрузчик…",
-        "The bootloader takes the firmware over the same RS-485 line: the tool closes the port for odhiddfu or rs485_firmware_update.py." => {
-            "Загрузчик принимает прошивку по той же линии RS-485: утилита освобождает порт для odhiddfu или rs485_firmware_update.py."
+        "The bootloader takes the firmware over the same RS-485 line. The tool closes the port: open the loader and upload the firmware. Without it the reader returns to work in 30 s." => {
+            "Загрузчик принимает прошивку по той же линии RS-485. Утилита освобождает порт: откройте загрузчик и загрузите прошивку. Без загрузки считыватель вернётся к работе через 30 с."
         }
 
         // Cards
@@ -417,12 +433,14 @@ fn russian(en: &str) -> Option<&'static str> {
         "The beeper did not start" => "Зуммер не запустился",
         "The events were not acknowledged" => "События не подтверждены",
         "Autoscan did not change" => "Автосканирование не переключилось",
-        "firmware 3.x: update it to 4.0" => "прошивка 3.x: обновите её до 4.0",
+        "firmware 3.x: use ODRFIDConfigM" => "прошивка 3.x: настройте в ODRFIDConfigM",
         "a Modbus device that is not an ODRFID-485" => "устройство Modbus, но не ODRFID-485",
         "This reader cannot be used" => "С этим считывателем работать нельзя",
         "Connection restored" => "Связь восстановлена",
         "Cannot read the settings" => "Не удалось прочитать настройки",
         "The reader restarted" => "Считыватель перезапустился",
+        "The reader restarted unexpectedly" => "Считыватель неожиданно перезапустился",
+        "The reader restarted unexpectedly: {}" => "Считыватель неожиданно перезапустился: {}",
         "The settings have not been read yet" => "Настройки ещё не прочитаны",
         "Settings not written" => "Настройки не записаны",
         "Bus settings not written" => "Настройки шины не записаны",
@@ -516,6 +534,7 @@ mod tests {
         ];
         let mut keys: Vec<String> = sources.iter().flat_map(|s| keys_in(s)).collect();
         keys.extend(crate::reader::OPS.iter().map(|o| o.name.to_string()));
+        keys.extend(crate::reader::RESET_CAUSES.map(String::from));
         // Page group headings, translated through a variable.
         keys.extend(["Settings", "Cards", "Tools"].map(String::from));
         assert!(keys.len() > 200, "{}", keys.len());

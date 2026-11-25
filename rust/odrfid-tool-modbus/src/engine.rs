@@ -13,7 +13,7 @@ use crate::i18n::{tr, trf};
 use crate::modbus::{Client, EXC_BUSY, EXC_DEVICE_FAILURE, Error, Line, Patience};
 use crate::reader::{
     BusSettings, CmdRequest, CmdResponse, CmdStatus, Events, Identity, Indicate, Indication, Live,
-    Settings, holding, input,
+    SelfTest, Settings, holding, input,
 };
 use crate::serial::{Bus, OpenError, PortInfo};
 use crate::traffic::Traffic;
@@ -167,6 +167,8 @@ pub struct Status {
     /// RAM until the reader restarts. Saving keeps both.
     pub scan_saved: Option<bool>,
     pub live: Option<Live>,
+    /// Input 25..29; `None` from builds without the self-test.
+    pub self_test: Option<SelfTest>,
     pub indication: Option<Indication>,
     pub events: Option<Events>,
     /// When a new card event last arrived.
@@ -269,6 +271,8 @@ struct Engine {
     failures: u32,
     serial: Option<u64>,
     boot_count: Option<u16>,
+    /// Until when a new start count is the restart the user asked for.
+    restart_expected: Option<Instant>,
     last_event: Option<u16>,
     next_poll: Instant,
     next_indication: Instant,
@@ -296,6 +300,7 @@ impl Engine {
             failures: 0,
             serial: None,
             boot_count: None,
+            restart_expected: None,
             last_event: None,
             next_poll: now,
             next_indication: now,
@@ -545,6 +550,7 @@ impl Engine {
         self.failures = 0;
         self.serial = None;
         self.boot_count = None;
+        self.restart_expected = None;
         self.last_event = None;
         self.mutate(|s| {
             s.identity = None;
@@ -552,6 +558,7 @@ impl Engine {
             s.settings = None;
             s.scan_saved = None;
             s.live = None;
+            s.self_test = None;
             s.indication = None;
             s.events = None;
             s.busy = None;
@@ -631,7 +638,7 @@ impl Engine {
                 self.halt(Link::Unsupported(text));
             }
             Ok(None) => self.halt(Link::Unsupported(
-                tr("firmware 3.x: update it to 4.0").into(),
+                tr("firmware 3.x: use ODRFIDConfigM").into(),
             )),
             Err(Error::Port(e)) => self.port_failed(e),
             Err(Error::Exception(_)) => self.halt(Link::Unsupported(
@@ -710,7 +717,7 @@ impl Engine {
             Ok(None) => Some(Found {
                 address,
                 identity: None,
-                note: Some(tr("firmware 3.x: update it to 4.0").into()),
+                note: Some(tr("firmware 3.x: use ODRFIDConfigM").into()),
             }),
             Err(Error::Exception(_)) => Some(Found {
                 address,
@@ -812,6 +819,7 @@ impl Engine {
 
     fn reload(&mut self) {
         self.read_settings();
+        self.read_self_test();
         self.read_indication();
         let _ = self.poll_live();
         self.read_events();
@@ -841,6 +849,14 @@ impl Engine {
             let target = t.clone();
             self.mutate(|s| s.target = Some(target));
         }
+    }
+
+    /// The self-test changes only at a start. Builds without it answer
+    /// exception 02: nothing to show then.
+    fn read_self_test(&mut self) {
+        let r = self.with_client(|c| c.read_input(input::SELF_TEST, input::SELF_TEST_COUNT));
+        let test = r.ok().and_then(|r| SelfTest::parse(&r));
+        self.mutate(|s| s.self_test = test);
     }
 
     fn read_indication(&mut self) {
@@ -950,7 +966,24 @@ impl Engine {
             // Unsaved settings, the queue and the last request are gone.
             self.seq = None;
             self.set_scan_saved(None);
-            self.notice(false, tr("The reader restarted"));
+            self.read_self_test();
+            let asked = self
+                .restart_expected
+                .take()
+                .is_some_and(|until| Instant::now() < until);
+            if asked {
+                self.notice(true, tr("The reader restarted"));
+            } else {
+                // Nobody asked: a power cut, the reset pin or the watchdog.
+                let cause = self.shared().self_test.map(|t| t.reset_text());
+                self.notice(
+                    false,
+                    match cause {
+                        Some(cause) => trf("The reader restarted unexpectedly: {}", &[&cause]),
+                        None => tr("The reader restarted unexpectedly").to_string(),
+                    },
+                );
+            }
             self.read_settings();
             self.read_indication();
         }
@@ -1286,6 +1319,12 @@ impl Engine {
         }
     }
 
+    /// The next new start count is this request's, not a fault. A request
+    /// that did not restart the reader leaves the window to run out.
+    fn expect_restart(&mut self) {
+        self.restart_expected = Some(Instant::now() + RESTART_WAIT + Duration::from_secs(10));
+    }
+
     /// The start counter of this reader at `bus` (the port moves there), or
     /// `None` when it does not answer there.
     fn boot_count_at(&mut self, bus: &BusSettings) -> Option<u16> {
@@ -1321,6 +1360,7 @@ impl Engine {
             return;
         };
         let before = self.boot_count;
+        self.expect_restart();
         let restarted = match self.write_once(holding::REBOOT, 1) {
             Ok(()) => Some(true),
             // Restarted: it answers with another start count.
@@ -1389,6 +1429,7 @@ impl Engine {
         };
         let factory = BusSettings::factory();
         let before = self.boot_count;
+        self.expect_restart();
         let reset = match self.write_once(holding::FACTORY_RESET, holding::FACTORY_RESET_MAGIC) {
             Ok(()) => Some(true),
             // Reset: it answers at the factory settings, started anew. Still
@@ -1709,10 +1750,22 @@ mod tests {
     fn restart_loss_and_return() {
         let bus = FakeBus::with_readers(&[FACTORY_ADDRESS]);
         let mut e = connected(&bus);
-        // A restart is noticed by the boot counter.
-        bus.with_reader(0, |r| r.boot_count += 1);
+        // The self-test of the power-on start.
+        let test = status(&e).self_test.expect("self-test");
+        assert!(test.passed());
+        assert_eq!(test.reset_text(), "power on or brownout");
+
+        // A restart nobody asked for is noticed by the boot counter and
+        // told with its cause.
+        bus.with_reader(0, |r| {
+            r.boot_count += 1;
+            r.reset_cause = 0x24;
+        });
         run(&mut e, 1);
-        assert!(status(&e).notices.iter().any(|n| !n.ok));
+        let n = last_notice(&e);
+        assert!(!n.ok, "{n:?}");
+        assert!(n.text.ends_with("unexpectedly: watchdog"), "{n:?}");
+        assert_eq!(status(&e).self_test.unwrap().reset_text(), "watchdog");
 
         // Silent reader: lost after three polls, back when it answers.
         bus.with_reader(0, |r| r.off = true);
@@ -1826,10 +1879,15 @@ mod tests {
         }
         let st = status(&e);
         assert_eq!(st.link, Link::Connected, "{st:?}");
-        assert_ne!(st.live.unwrap().boot_count, before);
+        assert_ne!(st.live.as_ref().unwrap().boot_count, before);
         assert!(st.events.is_some());
         assert_eq!(st.settings, Some(original));
         assert_eq!(st.scan_saved, None);
+        // Asked for: no alert.
+        let unexpected = |st: &Status| st.notices.iter().any(|n| n.text.contains("unexpectedly"));
+        assert!(!unexpected(&st), "{:?}", st.notices);
+        assert!(st.notices.last().unwrap().ok, "{:?}", st.notices);
+        assert_eq!(st.self_test.unwrap().reset_text(), "software restart");
 
         // A scan finds it.
         e.handle(Request::Connect(t(None)));
@@ -1856,6 +1914,12 @@ mod tests {
         assert_eq!(status(&e).target.unwrap().address, Some(FACTORY_ADDRESS));
         run(&mut e, 2);
         assert_eq!(status(&e).link, Link::Connected);
+        let st = status(&e);
+        assert!(
+            !st.notices.iter().any(|n| n.text.contains("unexpectedly")),
+            "{:?}",
+            st.notices
+        );
         assert_eq!(bus.with_reader(0, |r| r.address), FACTORY_ADDRESS);
 
         e.handle(Request::Bootloader);
@@ -1888,6 +1952,12 @@ mod tests {
         assert!(last_notice(&e).ok, "{:?}", last_notice(&e));
         assert_eq!(bus.with_reader(0, |r| r.boot_count), boots + 1);
         assert_eq!(writes_to(&bus, holding::REBOOT), 1);
+        // The polls see the new start count: the asked-for restart, no alert.
+        run(&mut e, 20);
+        let st = status(&e);
+        assert_eq!(st.live.as_ref().unwrap().boot_count, boots + 1);
+        assert!(st.notices.iter().all(|n| n.ok), "{:?}", st.notices);
+        assert_eq!(last_notice(&e).text, "The reader restarted");
 
         // The request is lost: it answers with the same counter.
         let bus = FakeBus::with_readers(&[FACTORY_ADDRESS]);

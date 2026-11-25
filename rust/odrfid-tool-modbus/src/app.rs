@@ -903,7 +903,9 @@ impl App {
             ),
             Confirm::Bootloader => (
                 tr("Start the bootloader for a firmware update?"),
-                tr("Modbus stops until the bootloader gets the firmware or the power is cycled."),
+                tr(
+                    "Modbus stops while the reader waits for the firmware. If no upload starts within 30 s, the reader returns to work.",
+                ),
                 tr("Start the bootloader"),
             ),
         };
@@ -978,7 +980,7 @@ fn tags(ui: &mut Ui, st: &Status) {
             }
             Link::PortError(_) => tr("Retrying…"),
             Link::AccessDenied(_) | Link::PortBusy(_) => tr("See the Connection page"),
-            Link::Bootloader => tr("Update with odhiddfu or rs485_firmware_update.py"),
+            Link::Bootloader => tr("Open the loader and upload the firmware within 30 s"),
             _ => "",
         };
         style::sub(ui, hint);
@@ -1001,6 +1003,9 @@ fn tags(ui: &mut Ui, st: &Status) {
     if live.odometer_fault {
         style::tag(ui, p.alert, tr("Odometer fault"))
             .on_hover_text(tr("The operating time is not saved to EEPROM"));
+    }
+    if let Some(test) = st.self_test.filter(|t| !t.passed()) {
+        style::tag(ui, p.alert, tr("Self-test failed")).on_hover_text(test.faults());
     }
 }
 
@@ -1693,7 +1698,7 @@ impl App {
             Link::Unsupported(_) => {
                 ui.add_space(4.0);
                 style::note(ui, Tone::Caution, glyph::INFO, |ui| {
-                    ui.label(tr("This tool works with ODRFID-485 readers with firmware 4.x. Readers with 3.x need the firmware update first (rs485_firmware_update.py) or the Qt odrfidcfgM."));
+                    ui.label(tr("This tool works with ODRFID-485 readers with firmware 4.x. Configure readers with 3.x in ODRFIDConfigM."));
                 });
             }
             _ => {}
@@ -1729,15 +1734,31 @@ impl App {
                     live.boot_count.to_string()
                 },
             );
+            let chip = if live.rfid_fault {
+                tr("MFRC522 did not start").to_string()
+            } else {
+                match st.self_test {
+                    Some(t) => format!("{} · MFRC522 {}", tr("OK"), t.chip_text()),
+                    None => tr("OK").to_string(),
+                }
+            };
+            fact(ui, tr("RFID chip"), &chip);
+            let Some(test) = st.self_test else {
+                return;
+            };
             fact(
                 ui,
-                tr("RFID chip"),
-                if live.rfid_fault {
-                    tr("MFRC522 did not start")
+                tr("Self-test at start"),
+                &if test.passed() {
+                    tr("passed").to_string()
                 } else {
-                    tr("OK")
+                    test.faults()
                 },
             );
+            if let Some(vdda) = test.vdda_text() {
+                fact(ui, tr("Supply at start"), &vdda);
+            }
+            fact(ui, tr("Last reset"), &test.reset_text());
         });
     }
 
@@ -1768,7 +1789,7 @@ impl App {
         sub_note(
             ui,
             tr(
-                "The bootloader takes the firmware over the same RS-485 line: the tool closes the port for odhiddfu or rs485_firmware_update.py.",
+                "The bootloader takes the firmware over the same RS-485 line. The tool closes the port: open the loader and upload the firmware. Without it the reader returns to work in 30 s.",
             ),
         );
     }

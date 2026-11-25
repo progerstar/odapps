@@ -465,6 +465,9 @@ pub enum Kind {
 
 pub fn button(ui: &mut Ui, kind: Kind, text: &str) -> Response {
     let p = pal(ui);
+    // Faded to half opacity, a filled button still reads as enabled on the
+    // dark theme: a disabled one is drawn plain.
+    let kind = if ui.is_enabled() { kind } else { Kind::Plain };
     let b = match kind {
         Kind::Primary => egui::Button::new(strong(text).color(Color32::WHITE)).fill(p.brand),
         Kind::Danger => egui::Button::new(strong(text).color(Color32::WHITE)).fill(p.alert),

@@ -81,6 +81,8 @@ pub struct FakeReader {
     /// Holding 256..263.
     pub indication: [u16; 8],
     pub boot_count: u16,
+    /// Input 29: the reset cause bits before this start.
+    pub reset_cause: u16,
     pub odometer: u32,
     pub field: Vec<FakeCard>,
     /// Index into `field` of the selected card.
@@ -130,6 +132,8 @@ impl FakeReader {
             save_fails: false,
             indication: [0, 0, 0, 0, 200, 200, 0, 0],
             boot_count: 1,
+            // Power-on: POR and the NRST pin.
+            reset_cause: 0x0C,
             odometer: 4 * 1440 + 125,
             field: Vec::new(),
             selected: None,
@@ -210,6 +214,8 @@ impl FakeReader {
             stop: modbus::StopBits::from_code(bus[3]).unwrap_or_default(),
         };
         self.boot_count = self.boot_count.wrapping_add(1).max(1);
+        // Software restart: bit 4, with the NRST pin it drives.
+        self.reset_cause = 0x14;
         self.queue.clear();
         self.overflow = false;
         self.last_event = 0;
@@ -255,6 +261,12 @@ impl FakeReader {
             22 => u16::from(self.indication[0] != 0),
             23 => self.indication[1],
             24 => u16::from(self.indication[2] != 0 || self.indication[6] != 0),
+            // The self-test passed: both checks run, NXP MFRC522 2.0.
+            25 => 0,
+            26 => 0x0300,
+            27 => 0x9292,
+            28 => 3297,
+            29 => self.reset_cause,
             256 => MODEL_ID,
             257 => self.version,
             258 => (self.serial >> 32) as u16,
