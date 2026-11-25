@@ -77,7 +77,7 @@ impl FakeBus {
         {
             let mut st = bus.state();
             st.plugged = serials.iter().map(|s| s.to_string()).collect();
-            st.version = "1.8U+3f2a1c9".into();
+            st.version = "1.8U-3f2a1c9".into();
         }
         bus
     }

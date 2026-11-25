@@ -6,7 +6,7 @@
 //! * output report 1 — a one-byte command, mapped by the firmware onto its
 //!   CDC commands (`~U`, `~T1`, …) and executed silently;
 //! * feature report 2 — the firmware version, 16 ASCII bytes
-//!   (`1.8U+<git sha>`; older builds `1.7U_<date>`);
+//!   (`1.8U-<git sha>`; older builds `1.7U_<date>`);
 //! * feature report 4 — channel states, the IN/TEMP channel and, from 1.8U,
 //!   diagnostics;
 //! * feature report 5 — the settings in the `~F`/`~W` text format plus the
@@ -89,7 +89,7 @@ pub enum Model {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Firmware {
-    /// As reported, e.g. `1.8U+3f2a1c9`.
+    /// As reported, e.g. `1.8U-3f2a1c9`.
     pub raw: String,
     /// `1.8`
     pub version: String,
@@ -116,7 +116,7 @@ impl Firmware {
             b'L' => Model::Lite,
             _ => Model::Unknown,
         };
-        // One separator follows the model letter: `+`, `_` or a space.
+        // One separator follows the model letter: `-` (1.8U), `_` or a space.
         let build = raw.get(letter + 2..).unwrap_or("").trim().to_string();
         Some(Self {
             raw,
@@ -685,12 +685,16 @@ mod tests {
 
     #[test]
     fn firmware_versions() {
-        let f = Firmware::parse(&version_report("1.8U+3f2a1c9")).unwrap();
+        let f = Firmware::parse(&version_report("1.8U-3f2a1c9")).unwrap();
         assert_eq!(f.model, Model::Pro2);
         assert_eq!(f.version, "1.8");
         assert_eq!(f.build, "3f2a1c9");
         assert_eq!(f.label(), "1.8U");
         assert!(f.has_diagnostics());
+        // A build from a tree with local changes ends in `d`.
+        let dirty = Firmware::parse(&version_report("1.8U-3f2a1c9d")).unwrap();
+        assert_eq!(dirty.build, "3f2a1c9d");
+        assert_eq!(dirty.label(), "1.8U");
 
         let old = Firmware::parse(&version_report("1.7U_1806141530")).unwrap();
         assert_eq!(old.model, Model::Pro2);
